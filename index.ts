@@ -2,6 +2,11 @@ import express = require('express')
 import "reflect-metadata"
 import { Entity, Column, PrimaryGeneratedColumn } from "typeorm"
 import { DataSource } from "typeorm"
+import {
+    validate,
+    IsNotEmpty
+} from 'class-validator';
+import bodyParser = require('body-parser')
 
 @Entity()
 class Feedback {
@@ -9,16 +14,17 @@ class Feedback {
     id: number
 
     @Column()
+    @IsNotEmpty()
     text: string
 
     @Column({ type: 'timestamptz' })
     date: Date;
 
-    @Column()
+    @Column({ nullable: true })
     filename: string
 
-    @Column()
-    pathOfFile: number
+    @Column({ nullable: true })
+    pathOfFile: string
 }
 
 const AppDataSource = new DataSource({
@@ -38,16 +44,38 @@ AppDataSource.initialize()
     })
     .catch((error) => console.log(error))
 
+const feedbackRepository = AppDataSource.getRepository(Feedback);
 const app = express()
 
+app.use(bodyParser.json());       // to support JSON-encoded bodies
+app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
+    extended: true
+}));
 //Get all feedback records
-app.get('/feedback', (req, res) => {
-    res.send('hello world')
-    //200 OK: Successful receipt of all feedback records
-    //404 Not Found: If the table is not found.
+app.get('/feedback',async (req, res) => {
+    let response = await feedbackRepository.find();
+    res.json(response).status(200);
 })
 //Create a new feedback entry
-app.post('/feedback', (req, res) => {
+app.post('/feedback', async (req, res) => {
+    let feedback = new Feedback();
+    feedback.text = req.body.text;
+    feedback.date = new Date();
+    feedback.filename = req.body.filename;
+    feedback.pathOfFile = req.body.pathOfFile;
+    const errors = await validate(feedback);
+    if (errors.length) {   
+        let messageOfErrors = errors.map((error) => {
+            return {
+                "property": error.property,
+                "error": error.constraints
+            }  
+        })
+        res.status(400).json(messageOfErrors) 
+    } else {
+        feedbackRepository.save(feedback);
+        res.status(201).send();
+    }
     //201 Created: Successful creation of a new feedback record
     //400 Bad Request: If the data in the request is incorrect
     //409 Conflict: If a record with this id already exists.
@@ -66,5 +94,9 @@ app.put('/feedback/:id', (req, res) => {
 app.delete('/feedback/:id', (req, res) => {
     //204 No Content: Successful deletion of the feedback record by ID.
     //404 Not Found: If a record with this id is not found.
+})
+
+app.listen(3000, () => {
+    console.log(`Example app listening`)
 })
 
