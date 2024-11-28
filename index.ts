@@ -1,4 +1,25 @@
 import express from 'express'
+import express = require('express')
+import "reflect-metadata"
+import { Entity, Column, PrimaryGeneratedColumn } from "typeorm"
+import { DataSource } from "typeorm"
+const AppDataSource = new DataSource({
+    type: "postgres",
+    host: "localhost",
+    port: 5432,
+    username: "username",
+    password: "password",
+    database: "database",
+    entities: [Feedback],
+    synchronize: true,
+    logging: false,
+})
+
+AppDataSource.initialize()
+    .then(() => {
+    })
+    .catch((error) => console.log(error))
+
 const app = express()
 
 //Get all feedback records
