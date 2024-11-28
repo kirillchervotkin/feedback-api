@@ -1,8 +1,26 @@
-import express from 'express'
 import express = require('express')
 import "reflect-metadata"
 import { Entity, Column, PrimaryGeneratedColumn } from "typeorm"
 import { DataSource } from "typeorm"
+
+@Entity()
+class Feedback {
+    @PrimaryGeneratedColumn()
+    id: number
+
+    @Column()
+    text: string
+
+    @Column({ type: 'timestamptz' })
+    date: Date;
+
+    @Column()
+    filename: string
+
+    @Column()
+    pathOfFile: number
+}
+
 const AppDataSource = new DataSource({
     type: "postgres",
     host: "localhost",
