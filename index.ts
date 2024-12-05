@@ -164,7 +164,21 @@ app.put('/feedback/:id', async (req, res) => {
     //404 Not Found: If a record with this id is not found.
 })
 //Delete a feedback record by ID
-app.delete('/feedback/:id', (req, res) => {
+app.delete('/feedback/:id', async (req, res) => {
+    const id = +req.params.id;
+    if (isNaN(id)) {
+        res.status(400).json({"error": `Error converting to number: ${req.params.id}`});
+        return;
+    };
+    const exists = await feedbackRepository.existsBy({ 
+        id: id,
+    });
+    if (!exists) {
+        res.status(404).json({"error": "Entry with this id is not found"});
+        return; 
+    }
+    await feedbackRepository.delete(id);
+    res.status(204).send();
     //204 No Content: Successful deletion of the feedback record by ID.
     //404 Not Found: If a record with this id is not found.
 })
