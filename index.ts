@@ -1,6 +1,6 @@
 import express = require('express')
 import "reflect-metadata"
-import { Entity, Column, PrimaryGeneratedColumn } from "typeorm"
+import { Entity, Column, PrimaryGeneratedColumn, Between, FindOptionsWhere } from "typeorm"
 import { DataSource } from "typeorm"
 import {
     validate,
@@ -53,8 +53,35 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
 }));
 //Get all feedback records
 app.get('/feedback',async (req, res) => {
-    let response = await feedbackRepository.find();
-    res.json(response).status(200);
+    let findOptions: FindOptionsWhere<Feedback> = {};
+
+    if ((req.query.from !== undefined) || (req.query.to !== undefined)) {
+        if (typeof req.query.from !== "string") {
+            res.status(400).json({"error": "The request must contain exactly one 'from' parameter"});
+            return;
+        }
+        if (typeof req.query.to !== "string") {
+            res.status(400).json({"error": "The request must contain exactly one 'to' parameter"});
+            return;
+        }
+        const dateFrom = Date.parse(req.query.from);
+        const dateTo = Date.parse(req.query.to);
+        const errors: string[] = [];
+        if (isNaN(dateFrom)) {
+            errors.push(`Error converting to date: ${req.query.from}`);
+        }
+        if (isNaN(dateTo)) {
+            errors.push(`Error converting to date: ${req.query.to}`);
+        }
+        if (errors.length) {
+            res.status(400).json({"errors": errors});
+            return;
+        }
+        findOptions.date = Between(new Date(dateFrom), new Date(dateTo));
+    };
+
+    let result = await feedbackRepository.findBy(findOptions);
+    res.status(200).json(result);
 })
 //Create a new feedback entry
 app.post('/feedback', async (req, res) => {
