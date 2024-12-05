@@ -126,7 +126,40 @@ app.get('/feedback/:id', async (req, res) => {
     //404 Not Found: If an entry with this id is not found
 })
 //Update an existing feedback record by ID
-app.put('/feedback/:id', (req, res) => {
+app.put('/feedback/:id', async (req, res) => {
+    const id = +req.params.id;
+    if (isNaN(id)) {
+        res.status(400).json({"error": `Error converting to number: ${req.params.id}`});
+        return;
+    };
+    
+    let partialFeedback = new Feedback();
+    partialFeedback.id = id;
+    partialFeedback.text = req.body.text;
+    partialFeedback.date = new Date();
+    partialFeedback.filename = req.body.filename;
+    partialFeedback.pathOfFile = req.body.pathOfFile;
+    
+    let feedback = await feedbackRepository.preload(partialFeedback);
+    if (feedback === undefined) {
+        res.status(404).json({"error": "Entry with this id is not found"}); 
+        return;
+    }
+
+    const errors = await validate(feedback);
+    if (errors.length) {   
+        let messageOfErrors = errors.map((error) => {
+            return {
+                "property": error.property,
+                "error": error.constraints
+            }  
+        })
+        res.status(400).json(messageOfErrors);
+        return; 
+    }
+
+    await feedbackRepository.update(id, feedback);
+    res.status(200).send();
     //200 OK: Successfully updating an existing feedback record by ID.
     //404 Not Found: If a record with this id is not found.
 })
