@@ -108,7 +108,20 @@ app.post('/feedback', async (req, res) => {
     //409 Conflict: If a record with this id already exists.
 })
 //Get one feedback record by ID
-app.get('/feedback/:id', (req, res) => {
+app.get('/feedback/:id', async (req, res) => {
+    const id = +req.params.id;
+    if (isNaN(id)) {
+        res.status(400).json({"error": `Error converting to number: ${req.params.id}`});
+        return;
+    };
+    let response = await feedbackRepository.findOneBy({
+        id: id,
+    });
+    if (response === null) {
+        res.status(404).json({"error": "Entry with this id is not found"}); 
+        return;
+    }
+    res.status(200).json(response);
     //200 OK: Successful receipt of one feedback record by ID
     //404 Not Found: If an entry with this id is not found
 })
