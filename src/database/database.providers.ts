@@ -1,6 +1,6 @@
 import { DataSource } from 'typeorm';
 import { Feedback } from 'src/feedbacks/entities/feedback.entity';
-import { dataBaseConstants } from './database.constants';
+import config from 'src/config'; 
 
 export const databaseProviders = [
   {
@@ -8,13 +8,13 @@ export const databaseProviders = [
     useFactory: async () => {
       const dataSource = new DataSource({
         type: "postgres",
-        host: dataBaseConstants.host,
-        port: dataBaseConstants.port,
-        username: dataBaseConstants.username,
-        password: dataBaseConstants.password,
-        database: dataBaseConstants.username,
+        host: config.databaseSettings.host,
+        port: config.databaseSettings.port,
+        username: config.databaseSettings.username,
+        password: config.databaseSettings.password,
+        database: config.databaseSettings.database,
         entities: [Feedback],
-        synchronize: true,
+        synchronize: false  
     });
       return dataSource.initialize();
     },
