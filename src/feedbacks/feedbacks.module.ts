@@ -4,12 +4,12 @@ import { FeedbacksController } from './feedbacks.controller';
 import { DatabaseModule } from '../database/database.module';
 import { feedbackProviders } from './feedback.providers';
 import { JwtModule } from '@nestjs/jwt';
-import { jwtConstants } from 'src/auth/constants';
+import config from 'src/config';
 
 @Module({
   imports: [DatabaseModule, JwtModule.register({
     global: true,
-    secret: jwtConstants.secret,
+    secret: config.secret,
     signOptions: { expiresIn: '60s' },
   })],
   controllers: [FeedbacksController],
