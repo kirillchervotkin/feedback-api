@@ -7,6 +7,6 @@ export class CreateFeedbackDto {
 
     filename: string
 
-    pathOfFile: string
+    file_path: string
 }
 
