@@ -16,5 +16,5 @@ class Feedback {
     filename: string
 
     @Column({ nullable: true })
-    pathOfFile: string
+    file_path: string
 }
